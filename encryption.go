@@ -15,44 +15,68 @@ import (
 
 func main() {
 
-  if (len(os.Args[1:]) < 1) {
-    fmt.Println(" Use the command line specification mentioned in the Assignment\n")
+  if (len(os.Args[1:]) < 4) {
+
+    fmt.Println(" Use the command line specification mentioned in the Assignment\n <file-name-executable> <input-file-name(plaintext or ciphertext)>  <64 character key> < encrypt or decrypt> <outputFileName>")
 
   } else {
   file_name := os.Args[1]
-  plaintext, err_data_file := ioutil.ReadFile(file_name)
+  fileContent, err_data_file := ioutil.ReadFile(file_name)
 
   Key := os.Args[2]
   hexAesKey := Key[0:32]
+
   //  TODO Uncomment below line while having HMAC
 //  hexHmacKey := Key[32:64]
 
-  hexAesKeyBytes, _ := hex.DecodeString(hexAesKey)
-  /* Error handling if file wasn't opened successfully */
-  if (err_data_file != nil) {
-    log.Fatal(err_data_file)
-  }
-  // re := regexp.MustCompile(`\r?\n`)
-  // input := re.ReplaceAllString(string(file), "")
-
-  /* Below is the region I'm testing encryption functionality */
-  //key := []byte("1234567891234567")
-  cipher_block, error_block := aes.NewCipher(hexAesKeyBytes)
-
-  // plaintext := []byte("123456789123asdasdsdasdasdasd12390sadasd
-  //   asdasdasasd1239j983h498h2r9329r3n29uen329un239u4n39u2nd29udn")
-
-  //iv := []byte("ThisistheIVfor12")
   iv := make([]byte,16)
   n, err := rand.Read(iv)
   if err != nil {
     fmt.Println(" Error generating a pseudo Random number")
   }
   fmt.Println("IV is ", iv , " and length is  ", n)
-  ivPlaintext := make([]byte, 16)
 
-  // Printing type of the cipher_block retrurned
-  //fmt.Println(reflect.TypeOf(cipher_block))
+  operation := os.Args[3] // Should be encrypt or decrypt
+  outputFileName := os.Args[4]
+  hexAesKeyBytes, _ := hex.DecodeString(hexAesKey)
+  /* Error handling if file wasn't opened successfully */
+  if (err_data_file != nil) {
+    log.Fatal(err_data_file)
+  }
+
+  if operation == "encrypt" {
+    encryptionAesCBC(iv, fileContent , hexAesKeyBytes, outputFileName)
+  } else if operation == "decrypt" {
+    decryptionAesCBC(fileContent, hexAesKeyBytes, outputFileName)
+  } else {
+    fmt.Println("Invalid operation\n Follow the command line specification")
+    }
+
+  }
+}
+
+
+/* Function to XOR 2 Byte Arrays */
+func XorBytes(ivPlaintext, iv, plaintext []byte) int {
+
+	ivLength := len(iv)
+  if len(plaintext) < ivLength {
+    ivLength = len(plaintext)
+
+	}
+
+	for i := 0; i < ivLength; i++ {
+    ivPlaintext[i] = iv[i] ^ plaintext[i]
+  }
+  return ivLength
+}
+
+func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, cipherTextFile string) {
+  /* Below is the region I'm testing encryption functionality */
+  //key := []byte("1234567891234567")
+  cipher_block, error_block := aes.NewCipher(hexAesKeyBytes)
+
+  ivPlaintext := make([]byte, 16)
 
   if (error_block != nil) {
     fmt.Println("Key size error")
@@ -112,29 +136,98 @@ func main() {
       ivPlaintext)
 
     }
+
+    fmt.Println("Length of ciphertext before concatenation", len(cipherText))
+    ivCiphertextConcatenated := make([]byte, len(iv) + len(cipherText))
+    ivCiphertextConcatenated = iv
+
+
+    for i := 0; i < len(cipherText); i++ {
+      ivCiphertextConcatenated = append(ivCiphertextConcatenated,
+      cipherText[i])
+    }
+    fmt.Println("Length of ciphertext after concatenation", len(ivCiphertextConcatenated))
     //fmt.Println(string(cipherText))
 
-    err := ioutil.WriteFile("ciphertext", cipherText, 0644)
+    err := ioutil.WriteFile(cipherTextFile, ivCiphertextConcatenated, 0644)
     if err != nil {
-      log.Fatal(err_data_file)
+      fmt.Println("Error opening file")
     }
   }
 
-  }
+
 }
 
+func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte, recoveredPlaintextFile string) {
 
-/* Function to XOR 2 Byte Arrays */
-func XorBytes(ivPlaintext, iv, plaintext []byte) int {
+  cipher_block, error_block := aes.NewCipher(hexAesKeyBytes)
 
-	ivLength := len(iv)
-  if len(plaintext) < ivLength {
-    ivLength = len(plaintext)
+  ivLength := 16
+  iv := ivCiphertextConcatenated[:ivLength]
+  fmt.Println(" IV during decryption is ", iv)
+  ciphertext := make([]byte, len(ivCiphertextConcatenated) - 16)
+  ciphertext = ivCiphertextConcatenated[ivLength:len(ivCiphertextConcatenated)]
 
-	}
+  //iv := []byte("ThisistheIVfor12")
 
-	for i := 0; i < ivLength; i++ {
-    ivPlaintext[i] = iv[i] ^ plaintext[i]
+  // Printing type of the cipher_block retrurned
+  //fmt.Println(reflect.TypeOf(cipher_block))
+
+  if (error_block != nil) {
+    fmt.Println("Key size error")
+    }
+
+  aesBlocksize := 16
+  fmt.Println(" Cipher text length is ", len(ciphertext))
+
+  // For handling case where size of ciphertext is less then aesBlocksize
+  if len(ciphertext) == 16 {
+  plaintext := make([]byte, aesBlocksize)
+  ivBlock1 := iv
+  cipher_block.Decrypt(plaintext[:aesBlocksize],ciphertext[:aesBlocksize])
+  numberOfBytes := XorBytes(plaintext[:aesBlocksize],
+    ivBlock1, plaintext[:aesBlocksize])
+  fmt.Println(" Number of bytes XOR'ed", numberOfBytes)
+  fmt.Println("plaintext is ", string(plaintext))
   }
-  return ivLength
+
+
+
+  if len(ciphertext) > 16 {
+
+    multipleVal := len(ciphertext) / 16
+    plaintext :=  make([]byte, aesBlocksize * multipleVal)
+    fmt.Println("Number of blocks is", multipleVal)
+    // For handling first block
+    ivBlock1 := iv
+    cipher_block.Decrypt(plaintext[:aesBlocksize],ciphertext[:aesBlocksize])
+    numberOfBytes := XorBytes(plaintext[:aesBlocksize],
+      ivBlock1, plaintext[:aesBlocksize])
+    fmt.Println(" Number of bytes XOR'ed", numberOfBytes)
+
+    // For handling rest of the blocks
+
+    for i := 1; i < multipleVal; i++ {
+
+          cipher_block.Decrypt(plaintext[(aesBlocksize * i):(aesBlocksize  * (i + 1))],
+          ciphertext[(aesBlocksize * i):(aesBlocksize * (i+1))])
+
+          // Xor the output of decryption with the IV
+
+          numberOfBytes = XorBytes(plaintext[(aesBlocksize * i):(aesBlocksize *(i + 1))],
+          ciphertext[(aesBlocksize * (i -1)): (aesBlocksize * i)] ,
+          plaintext[(aesBlocksize * i):(aesBlocksize  *(i + 1))] )
+          fmt.Println(" Number of bytes XOR'ed", numberOfBytes)
+        }
+
+    paddingByte := plaintext[(multipleVal * aesBlocksize) - 1]
+    plaintext = plaintext[:((multipleVal * aesBlocksize) - (int)(paddingByte) - 1)]
+
+    err := ioutil.WriteFile(recoveredPlaintextFile, plaintext, 0644)
+    if err != nil {
+      fmt.Println("Error opening file")
+    }
+
+  }
+
 }
