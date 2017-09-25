@@ -20,13 +20,18 @@ func main() {
     log.Fatal(err_data_file)
   }
 
-  hmacSHA256BlockSize := 64
   hexHmacKeyBytes, _ := hex.DecodeString(hexHmacKey)
   fmt.Println(hexHmacKeyBytes, " and length is ", len(hexHmacKeyBytes))
 
+  // Hmac function (Arguments - Key and Message)
+  hmacSha256(Message, hexHmacKeyBytes)
+}
+
+func hmacSha256(Message []byte, hexHmacKeyBytes []byte) {
+
   // As per HMAC specification, keys greater than the BlockSize are to be
   // shortened to 64 bytes
-
+  hmacSHA256BlockSize := 64
   key := make([]byte,hmacSHA256BlockSize )
   if (len(hexHmacKeyBytes) > hmacSHA256BlockSize) {
     // TODO Some problem with below key (unable to take as a byte array - DEBUG)
@@ -89,13 +94,9 @@ func main() {
 
   fmt.Println("HMAC is ",hashoKeyPadhasiKeyPadMessageConcatenated, " and length is ", len(hashoKeyPadhasiKeyPadMessageConcatenated))
 
-}
-
-func hmacSha256(message []byte, key []byte) {
 
 
 }
-
 
 /* Function to XOR 2 Byte Arrays */
 func XorBytes(ivPlaintext, iv, plaintext []byte) int {
