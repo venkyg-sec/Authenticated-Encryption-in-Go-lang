@@ -8,7 +8,6 @@ import (
   "encoding/hex"
   "log"
   "os"
-//  "regexp"
   "crypto/aes"
   //"reflect"
 )
@@ -245,6 +244,24 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
     fmt.Println("Receovered Message is ",recoveredMessage)
     fmt.Println("HMAC during recovery is ", TagOnRecoveredMessage)
     fmt.Println("HMAC received is", tagRetrieved)
+
+    boolVerificationHMAC := false
+
+    for i := 0; i < 32; i++ {
+      if(tagRetrieved[i] != TagOnRecoveredMessage[i]) {
+        boolVerificationHMAC = false
+        break;
+    } else {
+      boolVerificationHMAC = true
+    }
+
+  }
+
+    if (boolVerificationHMAC) {
+      fmt.Println("HMAC verification pass")
+    } else {
+      fmt.Println("HMAC verification failed")
+    }
 
     err := ioutil.WriteFile(recoveredPlaintextFile, recoveredMessage, 0644)
     if err != nil {
