@@ -43,12 +43,14 @@ func main() {
     log.Fatal(err_data_file)
   }
 
+  hexHmacKey := Key[32:64]
+  hexHmacKeyBytes, _ := hex.DecodeString(hexHmacKey)
+
   if operation == "encrypt" {
-    hexHmacKey := Key[32:64]
-    hexHmacKeyBytes, _ := hex.DecodeString(hexHmacKey)
+
     encryptionAesCBC(iv, fileContent , hexAesKeyBytes,hexHmacKeyBytes, outputFileName)
   } else if operation == "decrypt" {
-    decryptionAesCBC(fileContent, hexAesKeyBytes, outputFileName)
+    decryptionAesCBC(fileContent, hexAesKeyBytes, hexHmacKeyBytes, outputFileName)
   } else {
     fmt.Println("Invalid operation\n Follow the command line specification")
     }
@@ -82,7 +84,7 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
 
   fmt.Println("Message ", plaintext)
   fmt.Println("Tag ", hmac)
-  
+
   if (error_block != nil) {
     fmt.Println("Key size error")
     }
@@ -167,7 +169,7 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
 
 }
 
-func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte, recoveredPlaintextFile string) {
+func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  hexHmacKeyBytes []byte, recoveredPlaintextFile string) {
 
   cipher_block, error_block := aes.NewCipher(hexAesKeyBytes)
 
@@ -232,7 +234,18 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte, re
     paddingByte := plaintext[(multipleVal * aesBlocksize) - 1]
     plaintext = plaintext[:((multipleVal * aesBlocksize) - (int)(paddingByte) - 1)]
 
-    err := ioutil.WriteFile(recoveredPlaintextFile, plaintext, 0644)
+    // Removing tag from the recovered plaintext
+    tagRetrieved := plaintext[(len(plaintext) - 32):len(plaintext)]
+    recoveredMessage := plaintext[:(len(plaintext)- 32)]
+
+    // Computer HMAC on the recovered Message
+    TagOnRecoveredMessage := hmacSha256(recoveredMessage,hexHmacKeyBytes)
+
+    fmt.Println("Receovered Message is ",recoveredMessage)
+    fmt.Println("HMAC during recovery is ", TagOnRecoveredMessage)
+    fmt.Println("HMAC received is", tagRetrieved)
+
+    err := ioutil.WriteFile(recoveredPlaintextFile, recoveredMessage, 0644)
     if err != nil {
       fmt.Println("Error opening file")
     }
