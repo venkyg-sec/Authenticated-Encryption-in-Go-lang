@@ -232,8 +232,9 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
         }
 
     paddingByte := plaintext[(multipleVal * aesBlocksize) - 1]
-    plaintext = plaintext[:((multipleVal * aesBlocksize) - (int)(paddingByte) - 1)]
+    plaintext = plaintext[:((multipleVal * aesBlocksize) - (int)(paddingByte))]
 
+    fmt.Println("Recovered plaintext (with MAC) after removing padding",plaintext )
     // Removing tag from the recovered plaintext
     tagRetrieved := plaintext[(len(plaintext) - 32):len(plaintext)]
     recoveredMessage := plaintext[:(len(plaintext)- 32)]
