@@ -77,16 +77,22 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
   //key := []byte("1234567891234567")
   cipher_block, error_block := aes.NewCipher(hexAesKeyBytes)
   hmac := hmacSha256(plaintext, hexHmacKeyBytes)
-  fmt.Println("HMAC is ", hmac)
 
   ivPlaintext := make([]byte, 16)
 
+  fmt.Println("Message ", plaintext)
+  fmt.Println("Tag ", hmac)
+  
   if (error_block != nil) {
     fmt.Println("Key size error")
     }
 
+    for i:= 0; i < len(hmac); i++ {
 
-  fmt.Println(plaintext)
+      plaintext = append(plaintext, hmac[i])
+    }
+
+  fmt.Println("Message and Tag", plaintext)
   aesBlocksize := 16
   if len(plaintext) < 16 {
     residue := 16 - len(plaintext)
