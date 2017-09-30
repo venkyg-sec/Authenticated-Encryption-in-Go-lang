@@ -231,6 +231,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
         }
 
     paddingByte := plaintext[(multipleVal * aesBlocksize) - 1]
+
     plaintext = plaintext[:((multipleVal * aesBlocksize) - (int)(paddingByte))]
 
     fmt.Println("Recovered plaintext (with MAC) after removing padding",plaintext )
@@ -259,14 +260,15 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
 
     if (boolVerificationHMAC) {
       fmt.Println("HMAC verification pass")
+      err := ioutil.WriteFile(recoveredPlaintextFile, recoveredMessage, 0644)
+      if err != nil {
+        fmt.Println("Error opening file")
+      }
     } else {
-      fmt.Println("HMAC verification failed")
+      fmt.Println("INVALID MAC")
     }
 
-    err := ioutil.WriteFile(recoveredPlaintextFile, recoveredMessage, 0644)
-    if err != nil {
-      fmt.Println("Error opening file")
-    }
+
 
   }
 
