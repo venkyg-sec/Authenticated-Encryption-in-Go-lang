@@ -1,3 +1,8 @@
+// Copyright 2017 Venkatesh Gopal. All rights reserved.
+// Use of this code is governed by Venkatesh Gopal
+// Any modification and redistribution are to be notified to Venkatesh Gopal
+// vgopal3@jhu.edu, vnktshgopalg@gmail.com
+
 package main
 
 import (
@@ -115,8 +120,6 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
     cipherText := make([]byte, aes.BlockSize)
 
     cipher_block.Encrypt(cipherText,ivPlaintext)
-
-    //fmt.Printf("%x", ciphertext)
     fmt.Println(string(cipherText))
 
   } else if (len(plaintext) >= 16) {
@@ -198,7 +201,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
 
     fmt.Println("\nError during transmission. Ciphertext is not a multiple of" +
        "BlockSize ")
-     
+
   } else {
   // For handling case where size of ciphertext is same as blocksize
   if len(ciphertext) == 16 {
