@@ -7,6 +7,7 @@ Usage :
 ./encrypt-auth <mode> -k <32 byte key> -i <input-file> -o <output-file>
 
  where <mode> - encrypt (or) decrypt
+
  <32 byte key> - The program would use the first 16 bytes as the AES key and next 16 bytes as the HMAC key. The input for this key should be a 64 character Hexadecimal string
  <input-file> - If the mode is encrypt, the input-file should be the plaintext file_name. If the mode is decrypt, the input-file should bethe ciphertext file_name
  <output-file> - If the mode is encrypt, the output-file should be the name of the ciphertext file to which encrypted output is required to be stored.If the mode is decrypt, the output-file should be the name of the plaintext file to which the decrypted output (recovered plaintext) is to be stored
