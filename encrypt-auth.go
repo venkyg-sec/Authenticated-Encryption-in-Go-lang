@@ -7,7 +7,6 @@ import (
   "crypto/aes"
   "io/ioutil"
   "encoding/hex"
-  "log"
   "os"
 )
 
@@ -24,6 +23,16 @@ func main() {
   file_name := os.Args[5]
   fileContent, err_data_file := ioutil.ReadFile(file_name)
 
+  /* Error handling if file wasn't opened successfully */
+  if (err_data_file != nil) {
+    fmt.Println("\nError Opening Input file \n" +
+      "Reason - File doesn't exist (or) doesn't"+
+    " hold right permission to read \n")
+  } else {
+
+  if (len(os.Args[3]) != 64) {
+    fmt.Println("\n Error parsing the key (Not a 64 character Hexadecimal)")
+  } else {
   Key := os.Args[3]
   hexAesKey := Key[0:32]
 
@@ -37,10 +46,7 @@ func main() {
   operation := os.Args[1] // Should be encrypt or decrypt
   outputFileName := os.Args[7]
   hexAesKeyBytes, _ := hex.DecodeString(hexAesKey)
-  /* Error handling if file wasn't opened successfully */
-  if (err_data_file != nil) {
-    log.Fatal(err_data_file)
-  }
+
 
   hexHmacKey := Key[32:64]
   hexHmacKeyBytes, _ := hex.DecodeString(hexHmacKey)
@@ -55,6 +61,8 @@ func main() {
     }
 
   }
+  }
+ }
 }
 
 
