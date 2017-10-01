@@ -198,7 +198,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
   aesBlocksize := 16
   fmt.Println(" Cipher text length is ", len(ciphertext))
 
-  // For handling case where size of ciphertext is less then aesBlocksize
+  // For handling case where size of ciphertext is same as blocksize
   if len(ciphertext) == 16 {
   plaintext := make([]byte, aesBlocksize)
   ivBlock1 := iv
@@ -240,15 +240,17 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
 
     paddingByte := plaintext[(multipleVal * aesBlocksize) - 1]
     paddingbyteInteger := (int)(paddingByte)
-    //paddingBool := false
+    paddingBool := true
     for i:=1; i <= paddingbyteInteger; i++ {
 
       if (plaintext[(multipleVal * aesBlocksize) - i] != paddingByte) {
-          //  paddingBool = false
+            paddingBool = false
             fmt.Println("INVALID PADDING")
             break
       }
     }
+
+    if (paddingBool) {
     plaintext = plaintext[:((multipleVal * aesBlocksize) - (int)(paddingByte))]
 
     fmt.Println("Recovered plaintext (with MAC) after removing padding",plaintext )
@@ -286,8 +288,10 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
     }
 
 
-
+  } else {
+    fmt.Println("INVALID PADDING")
   }
+ }
 
 }
 
