@@ -186,10 +186,6 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
   ciphertext := make([]byte, len(ivCiphertextConcatenated) - 16)
   ciphertext = ivCiphertextConcatenated[ivLength:len(ivCiphertextConcatenated)]
 
-  //iv := []byte("ThisistheIVfor12")
-
-  // Printing type of the cipher_block retrurned
-  //fmt.Println(reflect.TypeOf(cipher_block))
 
   if (error_block != nil) {
     fmt.Println("Key size error")
@@ -198,6 +194,12 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
   aesBlocksize := 16
   fmt.Println(" Cipher text length is ", len(ciphertext))
 
+  if (len(ciphertext) % aesBlocksize != 0) {
+
+    fmt.Println("\nError during transmission. Ciphertext is not a multiple of" +
+       "BlockSize ")
+     
+  } else {
   // For handling case where size of ciphertext is same as blocksize
   if len(ciphertext) == 16 {
   plaintext := make([]byte, aesBlocksize)
@@ -293,6 +295,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
   }
  }
 
+}
 }
 
 
