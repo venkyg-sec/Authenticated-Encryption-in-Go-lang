@@ -200,7 +200,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
     }
 
   aesBlocksize := 16
-  
+
 
   if (len(ciphertext) % aesBlocksize != 0) {
 
@@ -292,7 +292,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
   }
 
     if (boolVerificationHMAC) {
-      fmt.Println("HMAC verification pass")
+      
       err := ioutil.WriteFile(recoveredPlaintextFile, recoveredMessage, 0644)
       if err != nil {
         fmt.Println("Error opening file")
