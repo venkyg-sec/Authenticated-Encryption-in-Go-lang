@@ -42,11 +42,11 @@ func main() {
   hexAesKey := Key[0:32]
 
   iv := make([]byte,16)
-  n, err := rand.Read(iv)
+  _, err := rand.Read(iv)
   if err != nil {
     fmt.Println(" Error generating a pseudo Random number")
   }
-  fmt.Println("IV is ", iv , " and length is  ", n)
+
 
   operation := os.Args[1] // Should be encrypt or decrypt
   outputFileName := os.Args[7]
@@ -94,8 +94,6 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
 
   ivPlaintext := make([]byte, 16)
 
-  fmt.Println("Message ", plaintext)
-  fmt.Println("Tag ", hmac)
 
   if (error_block != nil) {
     fmt.Println("Key size error")
@@ -106,7 +104,7 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
       plaintext = append(plaintext, hmac[i])
     }
 
-  fmt.Println("Message and Tag", plaintext)
+
   aesBlocksize := 16
   if len(plaintext) < 16 {
     residue := 16 - len(plaintext)
@@ -115,8 +113,10 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
 
     }
     numberOfBytes := XorBytes(ivPlaintext, iv, plaintext)
-    fmt.Println(numberOfBytes)
-    fmt.Println(" The XOR of IV and Plaintext is ", ivPlaintext)
+
+    if (numberOfBytes == 0) {
+      fmt.Println("\n XOR Error")
+    }
     cipherText := make([]byte, aes.BlockSize)
 
     cipher_block.Encrypt(cipherText,ivPlaintext)
@@ -124,7 +124,7 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
 
   } else if (len(plaintext) >= 16) {
     multipleVal := (len(plaintext)) / 16
-    fmt.Println("Number of blocks is ", multipleVal, " and length is ", len(plaintext))
+
     residue := 0
     if (len(plaintext) % 16 == 0) {
       residue = 16
@@ -134,15 +134,18 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
     for i:=0 ; i < residue ; i++ {
       plaintext = append(plaintext, byte(residue))
     }
-    fmt.Println(plaintext, " and length is ", len(plaintext))
+
     ivBlock1 := iv
     numberOfBytes := XorBytes(ivPlaintext, ivBlock1, plaintext[0:aesBlocksize])
-    fmt.Println("Number of bytes XOR'ed is", numberOfBytes)
+    if (numberOfBytes == 0) {
+      fmt.Println("\n XOR Error")
+    }
+
     cipherText := make([]byte, aesBlocksize * (multipleVal + 1))
-    fmt.Println(" Length of ciphertext block is ", len(cipherText))
+
 
     cipher_block.Encrypt(cipherText[0:aesBlocksize],ivPlaintext)
-    fmt.Println(" Iv for the next block",cipherText[0:aesBlocksize] )
+
 
     for i := 1; i <= multipleVal ; i++ {
 
@@ -150,15 +153,17 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
       numberOfBytes := XorBytes(ivPlaintext,
       cipherText[((i -1)* aesBlocksize):(i * aesBlocksize)],
       plaintext[(aesBlocksize * i):(aesBlocksize* (i+1))])
+      if (numberOfBytes == 0) {
+        fmt.Println("\n XOR Error")
+      }
 
 
-      fmt.Println("Number of bytes XOR'ed is", numberOfBytes)
       cipher_block.Encrypt(cipherText[(i*aesBlocksize):((i+1)*aesBlocksize)],
       ivPlaintext)
 
     }
 
-    fmt.Println("Length of ciphertext before concatenation", len(cipherText))
+
     ivCiphertextConcatenated := make([]byte, len(iv) + len(cipherText))
     ivCiphertextConcatenated = iv
 
@@ -167,8 +172,8 @@ func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHma
       ivCiphertextConcatenated = append(ivCiphertextConcatenated,
       cipherText[i])
     }
-    fmt.Println("Length of ciphertext after concatenation", len(ivCiphertextConcatenated))
-    //fmt.Println(string(cipherText))
+
+
 
     err := ioutil.WriteFile(cipherTextFile, ivCiphertextConcatenated, 0644)
     if err != nil {
@@ -185,7 +190,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
 
   ivLength := 16
   iv := ivCiphertextConcatenated[:ivLength]
-  fmt.Println(" IV during decryption is ", iv)
+
   ciphertext := make([]byte, len(ivCiphertextConcatenated) - 16)
   ciphertext = ivCiphertextConcatenated[ivLength:len(ivCiphertextConcatenated)]
 
@@ -195,7 +200,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
     }
 
   aesBlocksize := 16
-  fmt.Println(" Cipher text length is ", len(ciphertext))
+  
 
   if (len(ciphertext) % aesBlocksize != 0) {
 
@@ -210,8 +215,10 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
   cipher_block.Decrypt(plaintext[:aesBlocksize],ciphertext[:aesBlocksize])
   numberOfBytes := XorBytes(plaintext[:aesBlocksize],
     ivBlock1, plaintext[:aesBlocksize])
-  fmt.Println(" Number of bytes XOR'ed", numberOfBytes)
-  fmt.Println("plaintext is ", string(plaintext))
+  if (numberOfBytes == 0) {
+    fmt.Println("\n XOR Error")
+  }
+
   }
 
 
@@ -220,13 +227,17 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
 
     multipleVal := len(ciphertext) / 16
     plaintext :=  make([]byte, aesBlocksize * multipleVal)
-    fmt.Println("Number of blocks is", multipleVal)
+
     // For handling first block
     ivBlock1 := iv
     cipher_block.Decrypt(plaintext[:aesBlocksize],ciphertext[:aesBlocksize])
     numberOfBytes := XorBytes(plaintext[:aesBlocksize],
       ivBlock1, plaintext[:aesBlocksize])
-    fmt.Println(" Number of bytes XOR'ed", numberOfBytes)
+
+    if (numberOfBytes == 0) {
+      fmt.Println("\n XOR Error")
+    }
+
 
     // For handling rest of the blocks
 
@@ -240,7 +251,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
           numberOfBytes = XorBytes(plaintext[(aesBlocksize * i):(aesBlocksize *(i + 1))],
           ciphertext[(aesBlocksize * (i -1)): (aesBlocksize * i)] ,
           plaintext[(aesBlocksize * i):(aesBlocksize  *(i + 1))] )
-          fmt.Println(" Number of bytes XOR'ed", numberOfBytes)
+
         }
 
     paddingByte := plaintext[(multipleVal * aesBlocksize) - 1]
@@ -258,7 +269,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
     if (paddingBool) {
     plaintext = plaintext[:((multipleVal * aesBlocksize) - (int)(paddingByte))]
 
-    fmt.Println("Recovered plaintext (with MAC) after removing padding",plaintext )
+
     // Removing tag from the recovered plaintext
     tagRetrieved := plaintext[(len(plaintext) - 32):len(plaintext)]
     recoveredMessage := plaintext[:(len(plaintext)- 32)]
@@ -266,9 +277,7 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
     // Computer HMAC on the recovered Message
     TagOnRecoveredMessage := hmacSha256(recoveredMessage,hexHmacKeyBytes)
 
-    fmt.Println("Receovered Message is ",recoveredMessage)
-    fmt.Println("HMAC during recovery is ", TagOnRecoveredMessage)
-    fmt.Println("HMAC received is", tagRetrieved)
+
 
     boolVerificationHMAC := false
 
@@ -318,14 +327,14 @@ func hmacSha256(Message []byte, hexHmacKeyBytes []byte) ([32]byte) {
     lengthDifference := hmacSHA256BlockSize - len(hexHmacKeyBytes)
     padZeroByte := make([]byte, lengthDifference)
     key := hexHmacKeyBytes
-    fmt.Println("Key is ", key)
+
 
     for i := 0; i < lengthDifference; i++ {
       padZeroByte[i] = 0x00
       key = append(key,padZeroByte[i])
     }
 
-    fmt.Println(key, " and length is ", len(key))
+
 
 
   }
@@ -334,13 +343,13 @@ func hmacSha256(Message []byte, hexHmacKeyBytes []byte) ([32]byte) {
   for i := 0; i < 64; i++ {
     opadRep[i] = 0x5c
   }
-  fmt.Println(" Opad is " ,opadRep, " and length is ", len(opadRep))
+
 
   ipadRep := make([]byte, 64)
   for i := 0; i < 64; i++ {
     ipadRep[i] = 0x36
   }
-  fmt.Println(" Ipad is " ,ipadRep, " and length is ", len(ipadRep))
+
 
   xorOPadKey := make([]byte, 64)
   xorIPadKey := make([]byte, 64)
@@ -366,9 +375,6 @@ func hmacSha256(Message []byte, hexHmacKeyBytes []byte) ([32]byte) {
   }
 
   hashoKeyPadhasiKeyPadMessageConcatenated := sha256.Sum256(oKeyPadhasiKeyPadMessageConcatenated)
-
-  fmt.Println("HMAC is ",hashoKeyPadhasiKeyPadMessageConcatenated, " and length is ", len(hashoKeyPadhasiKeyPadMessageConcatenated))
-
 
   return hashoKeyPadhasiKeyPadMessageConcatenated
 
