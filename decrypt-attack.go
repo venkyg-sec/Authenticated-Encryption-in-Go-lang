@@ -117,12 +117,12 @@ func testForVariyingCiphertext(ciphertextFilename string) {
 				index := lenFileContent - 16 - (i + j)
 				fileContent[index] = byte(rand.Int31n(255))
 				fmt.Println("Random byte for index  = ", index, " is ", fileContent[index])
-
+				}
 				for f := 1; f < i; f++ {
 
 					fileContent[lenFileContent - 16 -f] = intermediateStateByteArray[16 - f] ^ byte(i)
 
-				}
+
 
 			}
 
