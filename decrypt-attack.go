@@ -93,7 +93,9 @@ func testForVariyingCiphertext(ciphertextFilename string) {
 	lenFileContent := len(fileContent)
 	fileContentCopy := make([]byte, lenFileContent)
 	fileContentCopyBytes := copy(fileContentCopy,fileContent)
-	fmt.Println(" So many bytes copied",fileContentCopyBytes )
+	if fileContentCopyBytes == 0 {
+		fmt.Println(" Copying problem")
+	}
 	// TODO Hardcoding now, to be removed later
 	fmt.Println(" File content is ", fileContent)
 	secondLastBlockBytes := make([]byte, 16)
@@ -118,7 +120,8 @@ func testForVariyingCiphertext(ciphertextFilename string) {
 
 				for f := 1; f < i; f++ {
 
-					fileContent[lenFileContent - 16 -f] = intermediateStateByteArray[16 - i + 1] ^ byte(i)
+					fileContent[lenFileContent - 16 -f] = intermediateStateByteArray[16 - f] ^ byte(i)
+
 				}
 
 			}
@@ -172,7 +175,7 @@ func testForVariyingCiphertext(ciphertextFilename string) {
 				// Writing back original contents to file before next operation
 				err = ioutil.WriteFile("ciphertext.txt", fileContentCopy, 0644)
 	}
-
+		fmt.Println("Decrypted plaintext in last block is", plaintextBookKeeping)
 
 
 }
