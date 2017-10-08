@@ -117,14 +117,13 @@ func testForVariyingCiphertext(ciphertextFilename string) {
 				index := lenFileContent - 16 - (i + j)
 				fileContent[index] = byte(rand.Int31n(255))
 				fmt.Println("Random byte for index  = ", index, " is ", fileContent[index])
-				}
+
+					}
+
 				for f := 1; f < i; f++ {
 
 					fileContent[lenFileContent - 16 -f] = intermediateStateByteArray[16 - f] ^ byte(i)
-
-
-
-			}
+				}
 
 			err := ioutil.WriteFile("ciphertext.txt", fileContent, 0644)
 			if (err != nil) {
@@ -175,22 +174,7 @@ func testForVariyingCiphertext(ciphertextFilename string) {
 				// Writing back original contents to file before next operation
 				err = ioutil.WriteFile("ciphertext.txt", fileContentCopy, 0644)
 	}
-		fmt.Println("Decrypted plaintext in last block is", plaintextBookKeeping)
+		fmt.Println("Decrypted plaintext in last block is", (plaintextBookKeeping))
 
 
-}
-
-/* Function to XOR 2 Byte Arrays */
-func XorBytes(ivPlaintext, iv, plaintext []byte) int {
-
-	ivLength := len(iv)
-  if len(plaintext) < ivLength {
-    ivLength = len(plaintext)
-
-	}
-
-	for i := 0; i < ivLength; i++ {
-    ivPlaintext[i] = iv[i] ^ plaintext[i]
-  }
-  return ivLength
 }
