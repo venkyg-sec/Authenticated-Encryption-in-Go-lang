@@ -18,47 +18,8 @@ func main() {
 	} else {
 
   ciphertextFilename := os.Args[2]
-  fileContent, err_data_file := ioutil.ReadFile(ciphertextFilename)
-  /* Error handling if file wasn't opened successfully */
-  if (err_data_file != nil) {
-    fmt.Println("Invalid file name, doesn't exist")
-  }
-	lenFileContent := len(fileContent)
-
-
-	//fileContent[lenFileContent - 1] = byte(56)
-
-	// Construct a regular expression to strip new line characters
-	re := regexp.MustCompile(`\r?\n`)
-
-	// Main here handles only finding the length of Padding
-	paddingLength := 0
-	for i := 1; i <= 16; i++ {
-
-			ithByte := fileContent[lenFileContent - 16 - i]
-			//fmt.Println("Last byte before overwriting is ",fileContent[lenFileContent - i] )
-			fileContent[lenFileContent - 16 - i] = byte(4)
-			//fmt.Println("Last byte is ",fileContent[lenFileContent - 16 - i] )
-			err := ioutil.WriteFile("ciphertext.txt", fileContent, 0644)
-			// Condition to check if writing to the file has failed
-			if err != nil {
-				fmt.Println("Error opening file")
-			}
-
-			testForPadOutput := testForPad()
-			testForPadOutputString := string(testForPadOutput)
-			testForPadOutputString = re.ReplaceAllString(testForPadOutputString, "")
-			//fmt.Println(testForPadOutputString, " and len is ", len(testForPadOutputString))
-			fileContent[lenFileContent - 16 - i] = ithByte
-			//fmt.Println("Last byte after check for padding is  ",fileContent[lenFileContent -16 - i] )
-			err = ioutil.WriteFile("ciphertext.txt", fileContent, 0644)
-			if testForPadOutputString != "INVALID PADDING" {
-					paddingLength = i - 1
-					break
-					}
-				}
-				fmt.Println("Padding Length is ", paddingLength)
-				testForVariyingCiphertext(ciphertextFilename)
+	testForVariyingCiphertext(ciphertextFilename)
+	
 		}
 }
 
@@ -72,7 +33,6 @@ func testForPad() ([]byte) {
 	}
 
 	return stdoutStderr
-
 
 }
 
