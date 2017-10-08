@@ -87,8 +87,7 @@ func XorBytes(ivPlaintext, iv, plaintext []byte) int {
 }
 
 func encryptionAesCBC(iv []byte, plaintext []byte, hexAesKeyBytes []byte, hexHmacKeyBytes []byte, cipherTextFile string) {
-  /* Below is the region I'm testing encryption functionality */
-  //key := []byte("1234567891234567")
+
   cipher_block, error_block := aes.NewCipher(hexAesKeyBytes)
   hmac := hmacSha256(plaintext, hexHmacKeyBytes)
 
@@ -254,8 +253,11 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
 
         }
 
+
     paddingByte := plaintext[(multipleVal * aesBlocksize) - 1]
+    //fmt.Println("Padding byte is ", paddingByte)
     paddingbyteInteger := (int)(paddingByte)
+    //fmt.Println("Padding byte in Integer is ", paddingbyteInteger)
     paddingBool := true
     for i:=1; i <= paddingbyteInteger; i++ {
 
@@ -292,8 +294,9 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
   }
 
     if (boolVerificationHMAC) {
-      
+
       err := ioutil.WriteFile(recoveredPlaintextFile, recoveredMessage, 0644)
+      fmt.Println("Decryption success")
       if err != nil {
         fmt.Println("Error opening file")
       }
@@ -302,8 +305,6 @@ func decryptionAesCBC(ivCiphertextConcatenated []byte, hexAesKeyBytes []byte,  h
     }
 
 
-  } else {
-    fmt.Println("INVALID PADDING")
   }
  }
 
